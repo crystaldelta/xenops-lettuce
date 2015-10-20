@@ -20,6 +20,7 @@ try:
     from importlib import import_module
 except ImportError:
     from django.utils.importlib import import_module
+from django.apps import apps as django_apps
 from django.conf import settings
 
 
@@ -53,7 +54,7 @@ def _filter_configured_avoids(module):
 
 
 def get_apps():
-    return map(import_module, settings.INSTALLED_APPS)
+    return [app_cfg.module for app_cfg in django_apps.get_app_configs()]
 
 
 def harvest_lettuces(only_the_apps=None, avoid_apps=None, path="features"):
