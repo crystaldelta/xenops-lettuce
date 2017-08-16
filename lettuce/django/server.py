@@ -133,6 +133,7 @@ class ThreadedServer(multiprocessing.Process):
 
     @staticmethod
     def get_real_address(address):
+        address = os.environ.get('LETTUCE_HOST', address)
         if address == '0.0.0.0' or address == 'localhost':
             address = '127.0.0.1'
 
