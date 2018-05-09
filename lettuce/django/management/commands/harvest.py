@@ -39,7 +39,6 @@ DJANGO_VERSION = StrictVersion(django.get_version())
 
 class Command(BaseCommand):
     help = u'Run lettuce tests all along installed apps'
-    args = '[PATH to feature file or folder]'
 
     if DJANGO_VERSION < StrictVersion('1.7'):
         requires_model_validation = False
@@ -48,6 +47,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.set_defaults(verbosity=3)  # default verbosity is 3
+        parser.add_argument(
+            'features', nargs='*', metavar='feature', action='store',
+            help='Path to feature file or folder'
+        )
         parser.add_argument(
             '-a', '--apps', action='store', dest='apps', default='',
             help='Run ONLY the django apps that are listed here. Comma separated'
@@ -132,14 +135,14 @@ class Command(BaseCommand):
                 default=False, help="Don't colorize the command output."
             )
 
-    def get_paths(self, args, apps_to_run, apps_to_avoid):
-        if args:
-            for path, exists in zip(args, map(os.path.exists, args)):
+    def get_paths(self, features, apps_to_run, apps_to_avoid):
+        if features:
+            for path, exists in zip(features, map(os.path.exists, features)):
                 if not exists:
                     sys.stderr.write("You passed the path '%s', but it does not exist.\n" % path)
                     sys.exit(1)
             else:
-                paths = args
+                paths = features
         else:
             paths = harvest_lettuces(apps_to_run, apps_to_avoid)  # list of tuples with (path, app_module)
 
@@ -152,6 +155,7 @@ class Command(BaseCommand):
         no_color = options.get('no_color', False)
         apps_to_run = tuple(options['apps'].split(","))
         apps_to_avoid = tuple(options['avoid_apps'].split(","))
+        features = options['features']
         run_server = not options['no_server']
         test_database = options['test_database']
         smtp_queue = options['smtp_queue']
@@ -183,7 +187,7 @@ class Command(BaseCommand):
 
         settings.DEBUG = options.get('debug', False)
 
-        paths = self.get_paths(args, apps_to_run, apps_to_avoid)
+        paths = self.get_paths(features, apps_to_run, apps_to_avoid)
         server = get_server(port=options['port'], threading=threading)
 
         if run_server:
